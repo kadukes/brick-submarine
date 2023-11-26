@@ -20,8 +20,10 @@ def read():
 def transform_pressure(raw_pressure_count):
   return (raw_pressure_count - OUT_MIN) * (P_MAX - P_MIN) / (OUT_MAX - OUT_MIN) + P_MIN #[psi]
 
+
 def transform_temperature(raw_temperature_count):
   return raw_temperature_count * 200 / 2047 - 50 #[°C]
+
 
 def getPressureData():
   status, pressure, temperature = read()

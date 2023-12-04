@@ -5,7 +5,6 @@ from configparser import ConfigParser
 import board
 import adafruit_icm20x
 
-
 logger = logging.getLogger(__name__)
 
 i2c = board.I2C()
@@ -18,35 +17,32 @@ ACCEL_X_CALIBRATION = 0.0 # [m/s²]
 ACCEL_Y_CALIBRATION = 0.0 # [m/s²]
 ACCEL_Z_CALIBRATION = 0.0 # [m/s²]
 
-GYRO_X_CALIBRATION = 0.0 # [rads/s]
-GYRO_Y_CALIBRATION = 0.0 # [rads/s]
-GYRO_Z_CALIBRATION = 0.0 # [rads/s]
+GYRO_X_CALIBRATION = 0.0  # [rads/s]
+GYRO_Y_CALIBRATION = 0.0  # [rads/s]
+GYRO_Z_CALIBRATION = 0.0  # [rads/s]
 
 rotation = (0.0, 0.0, 0.0) # [rads]
 velocity = (0.0, 0.0, 0.0) # [m/s]
 displacement = (0.0, 0.0, 0.0) # [m]
 
+def get_gyro_data():
+    (accX, accY, accZ) = icm.acceleration
+    (gyroX, gyroY, gyroZ) = icm.gyro
+    return ((accX - ACCEL_X_CALIBRATION, accY - ACCEL_Y_CALIBRATION, accZ - ACCEL_Z_CALIBRATION),  # [m/s²]
+            (gyroX - GYRO_X_CALIBRATION, gyroY - GYRO_Y_CALIBRATION, gyroZ - GYRO_Z_CALIBRATION),  # [rads/s]
+            icm.magnetic)  # [µT]
 
-def getGyroData():
-  (accX, accY, accZ) = icm.acceleration
-  (gyroX, gyroY, gyroZ) = icm.gyro
-  return ((
-    accX - ACCEL_X_CALIBRATION, accY - ACCEL_Y_CALIBRATION, accZ - ACCEL_Z_CALIBRATION # [m/s²]
-  ),
-  (
-    gyroX - GYRO_X_CALIBRATION, gyroY - GYRO_Y_CALIBRATION, gyroZ - GYRO_Z_CALIBRATION # [rads/s]
-  ),
-  icm.magnetic # [µT]
-  )
+def get_rotation():
+    return rotation  # [rads]
 
-def getRotation():
-  return rotation # [rads]
 
-def getVelocity():
-  return velocity # [m/s]
+def get_velocity():
+    return velocity  # [m/s]
 
-def getDisplacement():
-  return displacement # [m]
+
+def get_displacement():
+    return displacement  # [m]
+
 
 def load_calibration():
   global ACCEL_X_CALIBRATION

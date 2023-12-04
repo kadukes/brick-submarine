@@ -3,57 +3,58 @@ from gpiozero import PWMOutputDevice
 
 from sensor import tacho
 
+motor_up = PWMOutputDevice(12)  # pin for motor control 1
+motor_down = PWMOutputDevice(13)  # pin for motor control 2
 
-motorUp = PWMOutputDevice(12) # pin for motor control 1
-motorDown = PWMOutputDevice(13) # pin for motor control 2
-
-motorUp.value = 0
-motorDown.value = 0
+motor_up.value = 0
+motor_down.value = 0
 
 
-def move(targetPosition):
+def move(target_position):
+    """
+    dive or surface by controlling the syringe motor unit
+
+    targetPosition -- [0, SYRINGE_TACHOMETER_COUNT_TOTAL] the target position to move the syringe to
+                      (with an error by SYRINGE_BACKLASH)
   """
-  dive or surface by controlling the syringe motor unit
+    if target_position < 0 or target_position > tacho.SYRINGE_TACHOMETER_COUNT_TOTAL:
+        print("Cannot move to syringe position ", target_position)
+        return
 
-  targetPosition -- [0, SYRINGE_TACHO_COUNT_TOTAL] the target position to move the syringe to (with an error by SYRINGE_BACKLASH)
-  """
-  if targetPosition < 0 or targetPosition > tacho.SYRINGE_TACHO_COUNT_TOTAL:
-    print("Cannot move to syringe position ", targetPosition)
-    return
+    if target_position < tacho.current_tachometer_count:
+        # Experimental result: 18000>> | drift: 200<<
+        tacho.current_tachometer_count = (tacho.current_tachometer_count +
+                                          int(200 * (tacho.current_tachometer_count - target_position) / 18000))
 
-  if targetPosition < tacho.currentTachoCount:
-    # Experimental result: 18000>> | drift: 200<<
-    currentTachoCount = tacho.currentTachoCount + int(200 * (tacho.currentTachoCount - targetPosition) / 18000)
+    while abs(target_position - tacho.current_tachometer_count) > tacho.SYRINGE_PRECISION:
+        if target_position < tacho.current_tachometer_count:
+            motor_down.value = 0
+            motor_up.value = 1
+        elif target_position > tacho.current_tachometer_count:
+            motor_up.value = 0
+            motor_down.value = 1
+        sleep(0.1)
+    motor_up.value = 0
+    motor_down.value = 0
+    tacho.write_tachometer_position()  # TODO uncouple this from movement
 
-  while abs(targetPosition - tacho.currentTachoCount) > tacho.SYRINGE_PRECISION:
-    if targetPosition < tacho.currentTachoCount:
-      motorDown.value = 0
-      motorUp.value = 1
-    elif targetPosition > tacho.currentTachoCount:
-      motorUp.value = 0
-      motorDown.value = 1
-    sleep(0.1)
-  motorUp.value = 0
-  motorDown.value = 0
-  tacho.writeTachoPosition() # TODO uncouple this from movement
 
-def move_relative(deltaCount):
-  """
+def move_relative(delta_count):
+    """
   WARNING: use this only for debugging!
   move motor relative to current position
 
   deltaCount -- [int] the relative position from current position to move to
   """
-  targetPosition = tacho.currentTachoCount + deltaCount
-  while abs(targetPosition - tacho.currentTachoCount) > tacho.SYRINGE_PRECISION:
-    if targetPosition < tacho.currentTachoCount:
-      motorDown.value = 0
-      motorUp.value = 1
-    elif targetPosition > tacho.currentTachoCount:
-      motorUp.value = 0
-      motorDown.value = 1
-    sleep(0.1)
-  motorUp.value = 0
-  motorDown.value = 0
-  tacho.writeTachoPosition() # TODO uncouple this from movement
-
+    target_position = tacho.current_tachometer_count + delta_count
+    while abs(target_position - tacho.current_tachometer_count) > tacho.SYRINGE_PRECISION:
+        if target_position < tacho.current_tachometer_count:
+            motor_down.value = 0
+            motor_up.value = 1
+        elif target_position > tacho.current_tachometer_count:
+            motor_up.value = 0
+            motor_down.value = 1
+        sleep(0.1)
+    motor_up.value = 0
+    motor_down.value = 0
+    tacho.write_tachometer_position()  # TODO uncouple this from movement

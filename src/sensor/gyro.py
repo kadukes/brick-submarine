@@ -1,8 +1,6 @@
-from threading import Thread
-import queue
-from time import sleep
-import time
 import logging
+import time
+from configparser import ConfigParser
 
 import board
 import adafruit_icm20x
@@ -13,6 +11,9 @@ logger = logging.getLogger(__name__)
 i2c = board.I2C()
 icm = adafruit_icm20x.ICM20948(i2c)
 
+config_object = ConfigParser()
+config_object.read("config.ini")
+
 ACCEL_X_CALIBRATION = 0.0 # [m/s²]
 ACCEL_Y_CALIBRATION = 0.0 # [m/s²]
 ACCEL_Z_CALIBRATION = 0.0 # [m/s²]
@@ -20,9 +21,6 @@ ACCEL_Z_CALIBRATION = 0.0 # [m/s²]
 GYRO_X_CALIBRATION = 0.0 # [rads/s]
 GYRO_Y_CALIBRATION = 0.0 # [rads/s]
 GYRO_Z_CALIBRATION = 0.0 # [rads/s]
-
-gyroQueue = queue.Queue() # ([s], [rads/s]³)
-accQueue = queue.Queue() # ([s], [m/s²]³)
 
 rotation = (0.0, 0.0, 0.0) # [rads]
 velocity = (0.0, 0.0, 0.0) # [m/s]
@@ -50,7 +48,23 @@ def getVelocity():
 def getDisplacement():
   return displacement # [m]
 
+def load_calibration():
+  global ACCEL_X_CALIBRATION
+  global ACCEL_Y_CALIBRATION
+  global ACCEL_Z_CALIBRATION
+  global GYRO_X_CALIBRATION
+  global GYRO_Y_CALIBRATION
+  global GYRO_Z_CALIBRATION
+  ACCEL_X_CALIBRATION = config_object.getfloat("ACCELEROMETER", "ax_cal")
+  ACCEL_Y_CALIBRATION = config_object.getfloat("ACCELEROMETER", "ay_cal")
+  ACCEL_Z_CALIBRATION = config_object.getfloat("ACCELEROMETER", "az_cal")
+  GYRO_X_CALIBRATION = config_object.getfloat("GYROSCOPE", "gx_cal")
+  GYRO_Y_CALIBRATION = config_object.getfloat("GYROSCOPE", "gy_cal")
+  GYRO_Z_CALIBRATION = config_object.getfloat("GYROSCOPE", "gz_cal")
+  logger.info("Loaded calibration from config file")
+
 def calibrate():
+  logger.info("Calibrating accelerometer and gyroscope. Please hold the submarine steady for few seconds...")
   global ACCEL_X_CALIBRATION
   global ACCEL_Y_CALIBRATION
   global ACCEL_Z_CALIBRATION
@@ -77,71 +91,48 @@ def calibrate():
   GYRO_X_CALIBRATION = sum(gyroXs) / len(gyroXs)
   GYRO_Y_CALIBRATION = sum(gyroYs) / len(gyroYs)
   GYRO_Z_CALIBRATION = sum(gyroZs) / len(gyroZs)
-
-def gyroMonitor():
-  sleep(1)
-  logger.info("Calibrating accelerometer and gyroscope. Please hold the submarine steady for few seconds...")
-  calibrate()
+  config_object.set("ACCELEROMETER", "ax_cal", str(ACCEL_X_CALIBRATION))
+  config_object.set("ACCELEROMETER", "ay_cal", str(ACCEL_Y_CALIBRATION))
+  config_object.set("ACCELEROMETER", "az_cal", str(ACCEL_Z_CALIBRATION))
+  config_object.set("GYROSCOPE", "gx_cal", str(GYRO_X_CALIBRATION))
+  config_object.set("GYROSCOPE", "gy_cal", str(GYRO_Y_CALIBRATION))
+  config_object.set("GYROSCOPE", "gz_cal", str(GYRO_Z_CALIBRATION))
+  with open("config.ini", 'w') as conf:
+    config_object.write(conf)
   logger.info("Successfully calibrated accelerometer and gyroscope")
 
-  #gyroIntegratorThread = Thread(target=gyroIntegrator) # integrate gyro data
-  #gyroIntegratorThread.start()
-  #accIntegratorThread = Thread(target=accIntegrator) # integrate accelerometer data
-  #accIntegratorThread.start()
-  #queueSizeMonitorThread = Thread(target=queueSizeMonitor) # monitor queue sizes
-  #queueSizeMonitorThread.start()
-
+def gyroMonitor():
+  last_acc = (0.0, 0.0, 0.0)
+  acc_filtered = (0.0, 0.0, 0.0)
+  last_acc_filtered = (0.0, 0.0, 0.0)
+  last_vel = (0.0, 0.0, 0.0)
+  last_vel_filtered = (0.0, 0.0, 0.0)
   tStart = time.time_ns()
-  with open("accdata.csv", "w") as f:
+  filter = 0.8
+  last_t = 0.0
+  with open("accdata_raw.csv", "w") as f:
+    f.write("time;acc_x;acc_y;acc_z;acc_x_filtered;acc_y_filtered;acc_z_filtered;")
+    f.write("vel_x;vel_y;vel_z;vel_x_filtered;vel_y_filtered;vel_z_filtered;")
+    f.write("dis_x;dis_y;dis_z;dis_x_filtered;dis_y_filtered;dis_z_filtered\n")
     while True:
       t = (time.time_ns() - tStart) / 1000000000
       acc, _, _ = getGyroData()
-      f.write("{};{};{};{}\n".format(t, acc[0], acc[1], acc[2]))
-      #  gyroQueue.put((t, gyro[0], gyro[1], gyro[2]))
-      #  accQueue.put((t, acc[0], acc[1], acc[2]))
+      acc_filtered = ((1-filter)*acc[0] + filter*acc_filtered[0], (1-filter)*acc[1] + filter*acc_filtered[1], (1-filter)*acc[2] + filter*acc_filtered[2])
 
+      vel = ((last_acc[0] + acc[0]) / 2 * (t - last_t), (last_acc[1] + acc[1]) / 2 * (t - last_t), (last_acc[2] + acc[2]) / 2 * (t - last_t))
+      vel_filtered = ((last_acc_filtered[0] + acc_filtered[0]) / 2 * (t - last_t), (last_acc_filtered[1] + acc_filtered[1]) / 2 * (t - last_t), (last_acc_filtered[2] + acc_filtered[2]) / 2 * (t - last_t))
 
-gyroMonitorThread = Thread(target=gyroMonitor) # monitor gyro data
-gyroMonitorThread.start()
+      dis = ((last_vel[0] + vel[0]) / 2 * (t - last_t), (last_vel[1] + vel[1]) / 2 * (t - last_t), (last_vel[2] + vel[2]) / 2 * (t - last_t))
+      dis_filtered = ((last_vel_filtered[0] + vel_filtered[0]) / 2 * (t - last_t), (last_vel_filtered[1] + vel_filtered[1]) / 2 * (t - last_t), (last_vel_filtered[2] + vel_filtered[2]) / 2 * (t - last_t))
 
-def gyroIntegrator():
-  global rotation
-  lastT = 0.0 # [s]
-  lastGyro = (0.0, 0.0, 0.0) # [rads/s]
-  while True:
-    gyroData = gyroQueue.get()
-
-    rotationX = rotation[0] + (lastGyro[0] + gyroData[1]) / 2 * (gyroData[0] - lastT)
-    rotationY = rotation[1] + (lastGyro[1] + gyroData[2]) / 2 * (gyroData[0] - lastT)
-    rotationZ = rotation[2] + (lastGyro[2] + gyroData[3]) / 2 * (gyroData[0] - lastT)
-
-    rotation = (rotationX, rotationY, rotationZ)
-    lastT = gyroData[0]
-    lastGyro = (gyroData[1], gyroData[2], gyroData[3])
-    gyroQueue.task_done()
-
-def accIntegrator():
-  global velocity
-  global displacement
-  lastT = 0.0 # [s]
-  lastAcc = (0.0, 0.0, 0.0) # [m/s²]
-  while True:
-    accData = accQueue.get()
-
-    velocityX = velocity[0] + (lastAcc[0] + accData[1]) / 2 * (accData[0] - lastT)
-    velocityY = velocity[1] + (lastAcc[1] + accData[2]) / 2 * (accData[0] - lastT)
-    velocityZ = velocity[2] + (lastAcc[2] + accData[3]) / 2 * (accData[0] - lastT)
-    displacementX = displacement[0] + (velocity[0] + velocityX) / 2 * (accData[0] - lastT)
-    displacementY = displacement[1] + (velocity[1] + velocityY) / 2 * (accData[0] - lastT)
-    displacementZ = displacement[2] + (velocity[2] + velocityZ) / 2 * (accData[0] - lastT)
-
-    velocity = (velocityX, velocityY, velocityZ)
-    displacement = (displacementX, displacementY, displacementZ)
-    lastT = accData[0]
-    lastAcc = (accData[1], accData[2], accData[3])
-    accQueue.task_done()
-
-def queueSizeMonitor():
-  while True:
-    logger.info("Gyroscope queuesize: {} | Accelerometer queuesize: {}".format(gyroQueue.qsize(), accQueue.qsize()))
-    sleep(5)
+      last_t = t
+      last_acc = acc
+      last_acc_filtered = acc_filtered
+      last_vel = vel
+      last_vel_filtered = vel_filtered
+      f.write("{};{:.2f};{:.2f};{:.2f};".format(t, acc[0], acc[1], acc[2]))
+      f.write("{:.2f};{:.2f};{:.2f};".format(acc_filtered[0], acc_filtered[1], acc_filtered[2]))
+      f.write("{:.2f};{:.2f};{:.2f};".format(vel[0], vel[1], vel[2]))
+      f.write("{:.2f};{:.2f};{:.2f};".format(vel_filtered[0], vel_filtered[1], vel_filtered[2]))
+      f.write("{:.2f};{:.2f};{:.2f};".format(dis[0], dis[1], dis[2]))
+      f.write("{:.2f};{:.2f};{:.2f}\n".format(dis_filtered[0], dis_filtered[1], dis_filtered[2]))

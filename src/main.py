@@ -1,2 +1,0 @@
-from sensor import pressure
-

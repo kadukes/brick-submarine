@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 logger.info("Begin testing sensors")
 gyro.calibrate()
 #gyro.load_calibration()
-Thread(target=gyro.gyroMonitor).start() # monitor gyro data
+Thread(target=gyro.gyro_monitor).start() # monitor gyro data
 
 #while True:
 #  print("battery voltage [V]: ", adc.getBatteryVoltage(), "\r", end="")

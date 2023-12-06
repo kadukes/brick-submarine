@@ -2,3 +2,5 @@
 *.csv
 __pycache__/
 sensor/__pycache__/
+resources/*.FCStd
+resources/*.FCStd1

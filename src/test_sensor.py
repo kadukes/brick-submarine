@@ -15,7 +15,7 @@ gyro.calibrate()
 #gyro.load_calibration()
 Thread(target=gyro.gyro_monitor).start() # monitor gyro data
 
-#while True:
-#  print("battery voltage [V]: ", adc.getBatteryVoltage(), "\r", end="")
-#  print("acceleration [m/s²]: ({:.3f}, {:.3f}, {:.3f})\r".format(gyro.getGyroData()[0][0], gyro.getGyroData()[0][1], gyro.getGyroData()[0][2]), end="")
-#  sleep(1)
+while True:
+  logger.info("battery voltage [V]: {}".format(adc.get_battery_voltage()))
+  logger.info("displacement [m]: ({}, {}, {})".format(*gyro.get_displacement()))
+  sleep(1)

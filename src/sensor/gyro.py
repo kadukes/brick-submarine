@@ -80,39 +80,34 @@ def calibrate():
 
 def gyro_monitor():
     last_acc = (0.0, 0.0, 0.0)
-    acc_filtered = (0.0, 0.0, 0.0)
-    last_acc_filtered = (0.0, 0.0, 0.0)
-    last_vel = (0.0, 0.0, 0.0)
-    last_vel_filtered = (0.0, 0.0, 0.0)
+    last_gyr = (0.0, 0.0, 0.0)
+    global velocity
+    last_velocity = (0.0, 0.0, 0.0)
+    global displacement
+    global rotation
     t_start = time.time_ns()
-    pass_filter = 0.8
+    pass_filter = 0.95
+    pass_precision = 2
     last_t = 0.0
-    with open("accdata_raw.csv", "w") as f:
-        f.write("time;acc_x;acc_y;acc_z;acc_x_filtered;acc_y_filtered;acc_z_filtered;")
-        f.write("vel_x;vel_y;vel_z;vel_x_filtered;vel_y_filtered;vel_z_filtered;")
-        f.write("dis_x;dis_y;dis_z;dis_x_filtered;dis_y_filtered;dis_z_filtered\n")
-        while True:
-            t = (time.time_ns() - t_start) / 1000000000
-            acc, _, _ = get_gyro_data()
-            acc_filtered = add(mult(1 - pass_filter, acc), mult(pass_filter, acc_filtered))
-
-            vel = add(vel, mult((t - last_t) / 2, add(last_acc, acc)))
-            vel_filtered = add(vel_filtered, mult((t - last_t) / 2, add(last_acc_filtered, acc_filtered)))
-
-            dis = add(dis, mult((t - last_t) / 2, add(last_vel, vel)))
-            dis_filtered = add(dis_filtered, mult((t - last_t) / 2, add(last_vel_filtered, vel_filtered)))
-
-            last_t = t
-            last_acc = acc
-            last_acc_filtered = acc_filtered
-            last_vel = vel
-            last_vel_filtered = vel_filtered
-            f.write("{};{:.2f};{:.2f};{:.2f};".format(t, acc[0], acc[1], acc[2]))
-            f.write("{:.2f};{:.2f};{:.2f};".format(acc_filtered[0], acc_filtered[1], acc_filtered[2]))
-            f.write("{:.2f};{:.2f};{:.2f};".format(vel[0], vel[1], vel[2]))
-            f.write("{:.2f};{:.2f};{:.2f};".format(vel_filtered[0], vel_filtered[1], vel_filtered[2]))
-            f.write("{:.2f};{:.2f};{:.2f};".format(dis[0], dis[1], dis[2]))
-            f.write("{:.2f};{:.2f};{:.2f}\n".format(dis_filtered[0], dis_filtered[1], dis_filtered[2]))
+    while True:
+        t = (time.time_ns() - t_start) / 1000000000
+        acc, gyr, _ = get_gyro_data()
+        acc = (round(acc[0], pass_precision), round(acc[1], pass_precision), round(acc[2], pass_precision))
+        acc = add(mult(1 - pass_filter, acc), mult(pass_filter, last_acc))
+        acc = (round(acc[0], pass_precision), round(acc[1], pass_precision), round(acc[2], pass_precision))
+        gyr = (round(gyr[0], pass_precision), round(gyr[1], pass_precision), round(gyr[2], pass_precision))
+        gyr = add(mult(1 - pass_filter, gyr), mult(pass_filter, last_gyr))
+        gyr = (round(gyr[0], pass_precision), round(gyr[1], pass_precision), round(gyr[2], pass_precision))
+        velocity = add(velocity, mult((t - last_t) / 2, add(last_acc, acc)))
+        velocity = (round(velocity[0], pass_precision), round(velocity[1], pass_precision), round(velocity[2], pass_precision))
+        displacement = add(displacement, mult((t - last_t) / 2, add(last_velocity, velocity)))
+        displacement = (round(displacement[0], pass_precision), round(displacement[1], pass_precision), round(displacement[2], pass_precision))
+        rotation = add(rotation, mult((t - last_t) / 2, add(last_gyr, gyr)))
+        rotation = (round(rotation[0], pass_precision), round(rotation[1], pass_precision), round(rotation[2], pass_precision))
+        last_t = t
+        last_acc = acc
+        last_velocity = velocity
+        last_gyr = gyr
 
 
 def add(x, y):

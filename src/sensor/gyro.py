@@ -21,8 +21,8 @@ displacement = (0.0, 0.0, 0.0)  # [m]
 
 def get_gyro_data():
     return (
-        add(icm.acceleration, mult(-1, ACCEL_CALIBRATION)),  # [m/s²]
-        add(icm.gyro, mult(-1, GYRO_CALIBRATION)),  # [rads/s]
+        add(icm.acceleration, ACCEL_CALIBRATION),  # [m/s²]
+        add(icm.gyro, GYRO_CALIBRATION),  # [rads/s]
         icm.magnetic  # [µT]
     )
 
@@ -65,8 +65,8 @@ def calibrate():
         accel, gyro, _ = get_gyro_data()
         accel_values.append(accel)
         gyro_values.append(gyro)
-    ACCEL_CALIBRATION = mult(1 / 200, fold_sum(accel_values))
-    GYRO_CALIBRATION = mult(1 / 200, fold_sum(gyro_values))
+    ACCEL_CALIBRATION = mult(-1 / 200, fold_sum(accel_values))
+    GYRO_CALIBRATION = mult(-1 / 200, fold_sum(gyro_values))
     config_object.set("ACCELEROMETER", "ax_cal", str(ACCEL_CALIBRATION[0]))
     config_object.set("ACCELEROMETER", "ay_cal", str(ACCEL_CALIBRATION[1]))
     config_object.set("ACCELEROMETER", "az_cal", str(ACCEL_CALIBRATION[2]))

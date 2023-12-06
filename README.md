@@ -64,8 +64,21 @@ and videos. The blog also contains a complete parts list.
 
 ## Part 3: Electronics
 
-A picture with the existing electrical components and their 
-wiring will be published soon
+The picture below shows the circuit between the Raspberry Pi 
+Zero 2 W and the rest of the electronics
+
+![circuit diagram](./resources/circuit_diagram.png?raw=true)
+
+Here is a (non-exhaustive) list of the electronic components 
+required:
+* Battery source (e.g. LEGO® 8878 Rechargeable
+    Battery Box)
+* Voltage regulator (e.g. Pololu 2123 S7V8F5 5V)
+* 2x Motor driver (e.g. Pololu 2130 DRV8833 Dual H-bridge)
+* Sonar sensor (should be waterproof, e.g. A02YYUW)
+* Pressure sensor (e.g. Honeywell SSCMANV030PA2A3 2 bar)
+* 9-Axis Digital motion processor (e.g. ICM-20948)
+* Analog digital converter (e.g. COM-KY053ADC)
 
 ## Part 4: Software
 

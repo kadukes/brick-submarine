@@ -12,7 +12,7 @@ lastVoltageMonitored = 9.0  # [V]
 def voltage_monitor():
     global lastVoltageMonitored
     while True:
-        voltage = adc.get_battery_voltage()
+        voltage, value = adc.get_battery_voltage()
         if not lastVoltageMonitored < BATTERY_VOLTAGE_CRITICAL and voltage < BATTERY_VOLTAGE_CRITICAL:
             logging.critical("Battery Voltage is at {:.2f}. Initiating emergency protocol...".format(voltage))
         elif not lastVoltageMonitored < BATTERY_VOLTAGE_LOW and voltage < BATTERY_VOLTAGE_LOW:

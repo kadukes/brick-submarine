@@ -3,6 +3,7 @@ import logging
 
 from sensor import adc
 from sensor import gyro
+from sensor import pressure
 import buoyancy
 
 logger = logging.getLogger(__name__)
@@ -34,7 +35,16 @@ def voltage_monitor():
 def gyro_monitor():
     while True:
         if gyro.get_status() != 0:
-            logger.critical("Could not read data from gyro sensor")
+            logger.critical("Could not read data from gyro sensor for at least 10 seconds")
+            break
+        sleep(10)
+    emergency_surface()
+
+
+def pressure_monitor():
+    while True:
+        if pressure.get_status() != 0:
+            logger.critical("Could not read data from gyro sensor for at least 10 seconds")
             break
         sleep(10)
     emergency_surface()

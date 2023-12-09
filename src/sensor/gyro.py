@@ -93,25 +93,25 @@ def gyro_integrator():
     global displacement
     global rotation
     t_start = time.time_ns()
-    pass_filter = 0.95
+    pass_filter = 0.90
     last_t = 0.0
     while True:
         t = (time.time_ns() - t_start) / 1000000000
         try:
             acc, gyr, _ = get_gyro_data()
+            acc = round_vector(add(mult(1 - pass_filter, acc), mult(pass_filter, last_acc)))
+            gyr = round_vector(add(mult(1 - pass_filter, gyr), mult(pass_filter, last_gyr)))
+            velocity = round_vector(add(velocity, mult((t - last_t) / 2, add(last_acc, acc))))
+            displacement = round_vector(add(displacement, mult((t - last_t) / 2, add(last_velocity, velocity))))
+            rotation = round_vector(add(rotation, mult((t - last_t) / 2, add(last_gyr, gyr))))
+            last_t = t
+            last_acc = acc
+            last_velocity = velocity
+            last_gyr = gyr
+            status = 0
         except Exception as e:
             logger.critical("Could not read data from gyro sensor. Reason: {}".format(e))
             status = 1
-            continue
-        acc = round_vector(add(mult(1 - pass_filter, acc), mult(pass_filter, last_acc)))
-        gyr = round_vector(add(mult(1 - pass_filter, gyr), mult(pass_filter, last_gyr)))
-        velocity = round_vector(add(velocity, mult((t - last_t) / 2, add(last_acc, acc))))
-        displacement = round_vector(add(displacement, mult((t - last_t) / 2, add(last_velocity, velocity))))
-        rotation = round_vector(add(rotation, mult((t - last_t) / 2, add(last_gyr, gyr))))
-        last_t = t
-        last_acc = acc
-        last_velocity = velocity
-        last_gyr = gyr
 
 
 def add(x, y):

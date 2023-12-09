@@ -2,7 +2,7 @@ from threading import Thread
 import logging
 from time import sleep
 
-from sensor import adc
+import emergency
 from sensor import gyro
 from sensor import pressure
 from sensor import sonar
@@ -13,15 +13,12 @@ logger = logging.getLogger(__name__)
 logger.info("Begin testing sensors")
 gyro.calibrate()
 # gyro.load_calibration()
+
 Thread(target=gyro.gyro_monitor).start()  # monitor gyro data
+Thread(target=emergency.voltage_monitor).start()  # monitor battery voltage
 
 while True:
     logger.info("="*100)
-    try:
-        logger.info("Battery voltage [V]: {}; Value: {}".format(*adc.get_battery_voltage()))
-    except Exception as e:
-        logger.error("Could not read adc sensor! Reason: {}".format(e))
-
     try:
         logger.info("Acceleration [m/s²]: ({}, {}, {})".format(*gyro.get_gyro_data()[0]))
         logger.info("Velocity [m/s]: ({}, {}, {})".format(*gyro.get_velocity()))

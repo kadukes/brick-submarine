@@ -13,4 +13,4 @@ ads.gain = 2
 
 
 def get_battery_voltage():
-    return round(4 * chan0.voltage, 2), chan0.value  # [V], raw value
+    return round(4 * chan0.voltage, 2), chan0.value  # [V], [raw]

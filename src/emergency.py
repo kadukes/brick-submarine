@@ -4,6 +4,7 @@ import logging
 from sensor import adc
 from sensor import gyro
 from sensor import pressure
+from sensor import sonar
 import buoyancy
 
 logger = logging.getLogger(__name__)
@@ -45,6 +46,15 @@ def pressure_monitor():
     while True:
         if pressure.get_status() != 0:
             logger.critical("Could not read data from gyro sensor for at least 10 seconds")
+            break
+        sleep(10)
+    emergency_surface()
+
+
+def sonar_monitor():
+    while True:
+        if sonar.get_status() != 0:
+            logger.critical("Could not read data from sonar sensor for at least 10 seconds")
             break
         sleep(10)
     emergency_surface()

@@ -15,6 +15,8 @@ gyro.calibrate()
 # gyro.load_calibration()
 
 Thread(target=gyro.gyro_integrator).start()  # integrate gyro data
+Thread(target=sonar.sonar_listener).start()  # listen to sonar signals
+
 Thread(target=emergency.voltage_monitor).start()  # monitor battery voltage and adc sensor status
 Thread(target=emergency.gyro_monitor).start()  # monitor gyro sensor status
 Thread(target=emergency.pressure_monitor).start()  # monitor pressure sensor status

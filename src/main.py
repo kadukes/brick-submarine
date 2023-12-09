@@ -17,26 +17,19 @@ gyro.calibrate()
 Thread(target=gyro.gyro_integrator).start()  # integrate gyro data
 Thread(target=emergency.voltage_monitor).start()  # monitor battery voltage and adc sensor status
 Thread(target=emergency.gyro_monitor).start()  # monitor gyro sensor status
+Thread(target=emergency.pressure_monitor).start()  # monitor pressure sensor status
 
 while True:
     logger.info("="*100)
-    try:
-        logger.info("Acceleration [m/s²]: ({}, {}, {})".format(*gyro.get_gyro_data()[0]))
-        logger.info("Velocity [m/s]: ({}, {}, {})".format(*gyro.get_velocity()))
-        logger.info("Displacement [m]: ({}, {}, {})".format(*gyro.get_displacement()))
-        logger.info("Angular velocity [rads/s]: ({}, {}, {})".format(*gyro.get_gyro_data()[1]))
-        logger.info("Angular rotation [rads]: ({}, {}, {})".format(*gyro.get_rotation()))
-        logger.info("Magnetometer [µT]: ({}, {}, {})".format(*gyro.get_gyro_data()[2]))
-    except Exception as e:
-        logger.error("Could not read gyro sensor! Reason: {}".format(e))
 
-    try:
-        logger.info("Status: {}; Pressure [psi]: {}; Temperature [°C]: {}".format(*pressure.get_pressure_data()))
-    except Exception as e:
-        logger.error("Could not read pressure sensor! Reason: {}".format(e))
+    logger.info("Acceleration [m/s²]: ({}, {}, {})".format(*gyro.get_acceleration()))
+    logger.info("Velocity [m/s]: ({}, {}, {})".format(*gyro.get_velocity()))
+    logger.info("Displacement [m]: ({}, {}, {})".format(*gyro.get_displacement()))
+    logger.info("Angular velocity [rads/s]: ({}, {}, {})".format(*gyro.get_angular_velocity()))
+    logger.info("Angular rotation [rads]: ({}, {}, {})".format(*gyro.get_rotation()))
+    logger.info("Magnetometer [µT]: ({}, {}, {})".format(*gyro.get_magnetometer()))
 
-    try:
-        logger.info("Bottom distance [mm]: {}".format(sonar.get_sonar_data()))
-    except Exception as e:
-        logger.error("Could not read pressure sensor! Reason: {}".format(e))
+    logger.info("Pressure [psi]: {}".format(pressure.get_pressure()))
+    logger.info("Bottom distance [mm]: {}".format(sonar.get_sonar_data()))
+
     sleep(1)

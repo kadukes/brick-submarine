@@ -14,8 +14,9 @@ logger.info("Begin testing sensors")
 gyro.calibrate()
 # gyro.load_calibration()
 
-Thread(target=gyro.gyro_monitor).start()  # monitor gyro data
-Thread(target=emergency.voltage_monitor).start()  # monitor battery voltage
+Thread(target=gyro.gyro_integrator).start()  # integrate gyro data
+Thread(target=emergency.voltage_monitor).start()  # monitor battery voltage and adc sensor status
+Thread(target=emergency.gyro_monitor).start()  # monitor gyro sensor status
 
 while True:
     logger.info("="*100)

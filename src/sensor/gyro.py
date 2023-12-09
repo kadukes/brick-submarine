@@ -18,6 +18,8 @@ rotation = (0.0, 0.0, 0.0)  # [rads]
 velocity = (0.0, 0.0, 0.0)  # [m/s]
 displacement = (0.0, 0.0, 0.0)  # [m]
 
+status = 0  # [0 = ok, 1 = error]
+
 
 def get_gyro_data():
     return (
@@ -37,6 +39,10 @@ def get_velocity():
 
 def get_displacement():
     return displacement  # [m]
+
+
+def get_status():
+    return status  # [0 = ok, 1 = error]
 
 
 def load_calibration():
@@ -78,7 +84,8 @@ def calibrate():
     logger.info("Successfully calibrated accelerometer and gyroscope")
 
 
-def gyro_monitor():
+def gyro_integrator():
+    global status
     last_acc = (0.0, 0.0, 0.0)
     last_gyr = (0.0, 0.0, 0.0)
     global velocity
@@ -90,7 +97,12 @@ def gyro_monitor():
     last_t = 0.0
     while True:
         t = (time.time_ns() - t_start) / 1000000000
-        acc, gyr, _ = get_gyro_data()
+        try:
+            acc, gyr, _ = get_gyro_data()
+        except Exception as e:
+            logger.critical("Could not read data from gyro sensor. Reason: {}".format(e))
+            status = 1
+            continue
         acc = round_vector(add(mult(1 - pass_filter, acc), mult(pass_filter, last_acc)))
         gyr = round_vector(add(mult(1 - pass_filter, gyr), mult(pass_filter, last_gyr)))
         velocity = round_vector(add(velocity, mult((t - last_t) / 2, add(last_acc, acc))))
@@ -121,6 +133,7 @@ def mult(s, x):
     for x_el in x:
         r += (s * x_el,)
     return r
+
 
 def round_vector(x):
     r = ()

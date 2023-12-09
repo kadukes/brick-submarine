@@ -3,6 +3,7 @@ import time
 from configparser import ConfigParser
 
 import adafruit_icm20x
+from adafruit_icm20x import AccelRange, GyroRange
 import board
 
 logger = logging.getLogger(__name__)
@@ -11,6 +12,15 @@ config_object.read("config.ini")
 
 i2c = board.I2C()
 icm = adafruit_icm20x.ICM20948(i2c)
+icm.accelerometer_range(AccelRange.RANGE_2G)
+icm.gyro_range(GyroRange.RANGE_250_DPS)
+
+# TODO: setup data rates properly
+icm.gyro_data_rate(1)
+icm.gyro_data_rate_divisor(1)
+icm.accelerometer_data_rate(1)
+icm.accelerometer_data_rate_divisor(1)
+icm.magnetometer_data_rate(1)
 
 ACCEL_CALIBRATION = (0.0, 0.0, 0.0)  # [m/s²]
 GYRO_CALIBRATION = (0.0, 0.0, 0.0)  # [rads/s]

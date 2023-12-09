@@ -21,9 +21,9 @@ displacement = (0.0, 0.0, 0.0)  # [m]
 
 def get_gyro_data():
     return (
-        add(icm.acceleration, ACCEL_CALIBRATION),  # [m/s²]
-        add(icm.gyro, GYRO_CALIBRATION),  # [rads/s]
-        icm.magnetic  # [µT]
+        round_vector(add(icm.acceleration, ACCEL_CALIBRATION)),  # [m/s²]
+        round_vector(add(icm.gyro, GYRO_CALIBRATION)),  # [rads/s]
+        round_vector(icm.magnetic)  # [µT]
     )
 
 
@@ -87,23 +87,15 @@ def gyro_monitor():
     global rotation
     t_start = time.time_ns()
     pass_filter = 0.95
-    pass_precision = 2
     last_t = 0.0
     while True:
         t = (time.time_ns() - t_start) / 1000000000
         acc, gyr, _ = get_gyro_data()
-        acc = (round(acc[0], pass_precision), round(acc[1], pass_precision), round(acc[2], pass_precision))
-        acc = add(mult(1 - pass_filter, acc), mult(pass_filter, last_acc))
-        acc = (round(acc[0], pass_precision), round(acc[1], pass_precision), round(acc[2], pass_precision))
-        gyr = (round(gyr[0], pass_precision), round(gyr[1], pass_precision), round(gyr[2], pass_precision))
-        gyr = add(mult(1 - pass_filter, gyr), mult(pass_filter, last_gyr))
-        gyr = (round(gyr[0], pass_precision), round(gyr[1], pass_precision), round(gyr[2], pass_precision))
-        velocity = add(velocity, mult((t - last_t) / 2, add(last_acc, acc)))
-        velocity = (round(velocity[0], pass_precision), round(velocity[1], pass_precision), round(velocity[2], pass_precision))
-        displacement = add(displacement, mult((t - last_t) / 2, add(last_velocity, velocity)))
-        displacement = (round(displacement[0], pass_precision), round(displacement[1], pass_precision), round(displacement[2], pass_precision))
-        rotation = add(rotation, mult((t - last_t) / 2, add(last_gyr, gyr)))
-        rotation = (round(rotation[0], pass_precision), round(rotation[1], pass_precision), round(rotation[2], pass_precision))
+        acc = round_vector(add(mult(1 - pass_filter, acc), mult(pass_filter, last_acc)))
+        gyr = round_vector(add(mult(1 - pass_filter, gyr), mult(pass_filter, last_gyr)))
+        velocity = round_vector(add(velocity, mult((t - last_t) / 2, add(last_acc, acc))))
+        displacement = round_vector(add(displacement, mult((t - last_t) / 2, add(last_velocity, velocity))))
+        rotation = round_vector(add(rotation, mult((t - last_t) / 2, add(last_gyr, gyr))))
         last_t = t
         last_acc = acc
         last_velocity = velocity
@@ -128,4 +120,10 @@ def mult(s, x):
     r = ()
     for x_el in x:
         r += (s * x_el,)
+    return r
+
+def round_vector(x):
+    r = ()
+    for x_el in x:
+        r += (round(x_el, 2),)
     return r

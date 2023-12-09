@@ -16,6 +16,7 @@ gyro.calibrate()
 Thread(target=gyro.gyro_monitor).start()  # monitor gyro data
 
 while True:
+    logger.info("="*100)
     try:
         logger.info("Battery voltage [V]: {}; Value: {}".format(*adc.get_battery_voltage()))
     except Exception as e:

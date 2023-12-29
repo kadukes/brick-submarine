@@ -1,4 +1,7 @@
+import logging
 import serial
+
+logger = logging.getLogger(__name__)
 
 SER = serial.Serial(
     port="/dev/serial0",
@@ -23,7 +26,14 @@ def sonar_listener():
             checksum = (data_init + data_buffer[0] + data_buffer[1]) & 0xff
             if data_buffer[2] == checksum:
                 current_measured_distance = (data_buffer[0] << 8) + data_buffer[1]
-                status = 0
+                if current_measured_distance > 0:
+                    status = 0
+                else:
+                    logger.critical("Could not read data from sonar sensor. Reason: Sonar sensor responding with 0.")
+                    status = 1
+            else:
+                logger.critical("Could not read data from sonar sensor. Reason: Sonar sensor checksum mismatch.")
+                status = 1
 
 
 def get_status():

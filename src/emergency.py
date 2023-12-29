@@ -34,28 +34,46 @@ def voltage_monitor():
 
 
 def gyro_monitor():
+    count = 0
     while True:
         if gyro.get_status() != 0:
-            logger.critical("Could not read data from gyro sensor for at least 10 seconds")
-            break
+            if count == 1:
+                logger.critical("Could not read data from gyro sensor for at least 10 seconds")
+                break
+            else:
+                count += 1
+        else:
+            count = 0
         sleep(10)
     emergency_surface()
 
 
 def pressure_monitor():
+    count = 0
     while True:
         if pressure.get_status() != 0:
-            logger.critical("Could not read data from gyro sensor for at least 10 seconds")
-            break
+            if count == 1:
+                logger.critical("Could not read data from gyro sensor for at least 10 seconds")
+                break
+            else:
+                count += 1
+        else:
+            count = 0
         sleep(10)
     emergency_surface()
 
 
 def sonar_monitor():
+    count = 0
     while True:
         if sonar.get_status() != 0:
-            logger.critical("Could not read data from sonar sensor for at least 10 seconds")
-            break
+            if count == 1:
+                logger.critical("Could not read data from sonar sensor for at least 10 seconds")
+                break
+            else:
+                count += 1
+        else:
+            count = 0
         sleep(10)
     emergency_surface()
 

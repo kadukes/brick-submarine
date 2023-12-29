@@ -3,6 +3,7 @@ import time
 from configparser import ConfigParser
 
 import adafruit_icm20x
+from adafruit_icm20x import AccelRange, GyroRange, MagDataRate
 import board
 
 logger = logging.getLogger(__name__)
@@ -12,23 +13,33 @@ config_object.read("config.ini")
 i2c = board.I2C()
 icm = adafruit_icm20x.ICM20948(i2c)
 
+icm.accelerometer_range(AccelRange.RANGE_2G)
+icm.gyro_range(GyroRange.RANGE_250_DPS)
+icm.gyro_data_rate_divisor(0)
+icm.accelerometer_data_rate_divisor(0)
+icm.magnetometer_data_rate(MagDataRate.RATE_100HZ)
+
 ACCEL_CALIBRATION = (0.0, 0.0, 0.0)  # [m/s²]
 GYRO_CALIBRATION = (0.0, 0.0, 0.0)  # [rads/s]
+angular_velocity = (0.0, 0.0, 0.0)  # [rads/s]
 rotation = (0.0, 0.0, 0.0)  # [rads]
+acceleration = (0.0, 0.0, 0.0)  # [m/s²]
 velocity = (0.0, 0.0, 0.0)  # [m/s]
 displacement = (0.0, 0.0, 0.0)  # [m]
+magnetometer = (0.0, 0.0, 0.0)  # [µT]
+status = 0  # [0 = ok, 1 = error]
 
 
-def get_gyro_data():
-    return (
-        round_vector(add(icm.acceleration, ACCEL_CALIBRATION)),  # [m/s²]
-        round_vector(add(icm.gyro, GYRO_CALIBRATION)),  # [rads/s]
-        round_vector(icm.magnetic)  # [µT]
-    )
+def get_angular_velocity():
+    return angular_velocity  # [rads/s]
 
 
 def get_rotation():
     return rotation  # [rads]
+
+
+def get_acceleration():
+    return acceleration  # [m/s²]
 
 
 def get_velocity():
@@ -37,6 +48,22 @@ def get_velocity():
 
 def get_displacement():
     return displacement  # [m]
+
+
+def get_magnetometer():
+    return magnetometer  # [µT]
+
+
+def get_status():
+    return status  # [0 = ok, 1 = error]
+
+
+def get_gyro_data():
+    return (
+        round_vector(add(icm.acceleration, ACCEL_CALIBRATION)),  # [m/s²]
+        round_vector(add(icm.gyro, GYRO_CALIBRATION)),  # [rads/s]
+        round_vector(icm.magnetic)  # [µT]
+    )
 
 
 def load_calibration():
@@ -78,28 +105,36 @@ def calibrate():
     logger.info("Successfully calibrated accelerometer and gyroscope")
 
 
-def gyro_monitor():
-    last_acc = (0.0, 0.0, 0.0)
-    last_gyr = (0.0, 0.0, 0.0)
+def gyro_integrator():
+    global status
+    global angular_velocity
+    global acceleration
     global velocity
     last_velocity = (0.0, 0.0, 0.0)
     global displacement
     global rotation
+    global magnetometer
     t_start = time.time_ns()
-    pass_filter = 0.95
+    pass_filter = 0.90
     last_t = 0.0
     while True:
         t = (time.time_ns() - t_start) / 1000000000
-        acc, gyr, _ = get_gyro_data()
-        acc = round_vector(add(mult(1 - pass_filter, acc), mult(pass_filter, last_acc)))
-        gyr = round_vector(add(mult(1 - pass_filter, gyr), mult(pass_filter, last_gyr)))
-        velocity = round_vector(add(velocity, mult((t - last_t) / 2, add(last_acc, acc))))
-        displacement = round_vector(add(displacement, mult((t - last_t) / 2, add(last_velocity, velocity))))
-        rotation = round_vector(add(rotation, mult((t - last_t) / 2, add(last_gyr, gyr))))
-        last_t = t
-        last_acc = acc
-        last_velocity = velocity
-        last_gyr = gyr
+        try:
+            acc, gyr, mag = get_gyro_data()
+            acc = round_vector(add(mult(1 - pass_filter, acc), mult(pass_filter, acceleration)))
+            gyr = round_vector(add(mult(1 - pass_filter, gyr), mult(pass_filter, angular_velocity)))
+            velocity = round_vector(add(velocity, mult((t - last_t) / 2, add(acceleration, acc))))
+            displacement = round_vector(add(displacement, mult((t - last_t) / 2, add(last_velocity, velocity))))
+            rotation = round_vector(add(rotation, mult((t - last_t) / 2, add(angular_velocity, gyr))))
+            magnetometer = round_vector(add(mult(1 - pass_filter, mag), mult(pass_filter, magnetometer)))
+            last_t = t
+            acceleration = acc
+            last_velocity = velocity
+            angular_velocity = gyr
+            status = 0
+        except Exception as e:
+            logger.critical("Could not read data from gyro sensor. Reason: {}".format(e))
+            status = 1
 
 
 def add(x, y):
@@ -121,6 +156,7 @@ def mult(s, x):
     for x_el in x:
         r += (s * x_el,)
     return r
+
 
 def round_vector(x):
     r = ()

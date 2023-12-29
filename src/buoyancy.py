@@ -1,7 +1,11 @@
 from time import sleep
+import logging
 from gpiozero import PWMOutputDevice
 
 from sensor import tacho
+
+
+logger = logging.getLogger(__name__)
 
 motor_up = PWMOutputDevice(12)  # pin for motor control 1
 motor_down = PWMOutputDevice(13)  # pin for motor control 2
@@ -16,9 +20,9 @@ def move(target_position):
 
     targetPosition -- [0, SYRINGE_TACHOMETER_COUNT_TOTAL] the target position to move the syringe to
                       (with an error by SYRINGE_BACKLASH)
-  """
+    """
     if target_position < 0 or target_position > tacho.SYRINGE_TACHOMETER_COUNT_TOTAL:
-        print("Cannot move to syringe position ", target_position)
+        logger.error("Cannot move to syringe position {}".format(target_position))
         return
 
     if target_position < tacho.current_tachometer_count:

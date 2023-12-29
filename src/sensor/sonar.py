@@ -1,5 +1,3 @@
-from threading import Thread
-
 import serial
 
 SER = serial.Serial(
@@ -10,24 +8,31 @@ SER = serial.Serial(
     bytesize=serial.EIGHTBITS,
     timeout=1)
 
-currentMeasuredDistance = 0  # [mm]
+current_measured_distance = 0  # [mm]
+status = 0  # [0 = ok, 1 = error]
 
 
 def sonar_listener():
-    global currentMeasuredDistance
+    global current_measured_distance
+    global status
     while True:
+<<<<<<< HEAD
         SER.write(0x55)
         if SER.read() == b'\xff':
+=======
+        if SER.read() == b'\xff':  # TODO: detect timeout
+>>>>>>> c7f4e0a4a1d9eb1e3d42816867f0b3570ef67c13
             data_init = 0xff
             data_buffer = SER.read(3)
             checksum = (data_init + data_buffer[0] + data_buffer[1]) & 0xff
             if data_buffer[2] == checksum:
-                currentMeasuredDistance = (data_buffer[0] << 8) + data_buffer[1]
+                current_measured_distance = (data_buffer[0] << 8) + data_buffer[1]
+                status = 0
 
 
-sonarThread = Thread(target=sonar_listener)  # listen to sonar signals in separated thread
-sonarThread.start()
+def get_status():
+    return status  # [0 = ok, 1 = error]
 
 
 def get_sonar_data():
-    return currentMeasuredDistance  # [mm]
+    return current_measured_distance  # [mm]

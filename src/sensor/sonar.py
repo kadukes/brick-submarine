@@ -16,12 +16,8 @@ def sonar_listener():
     global current_measured_distance
     global status
     while True:
-<<<<<<< HEAD
         SER.write(0x55)
         if SER.read() == b'\xff':
-=======
-        if SER.read() == b'\xff':  # TODO: detect timeout
->>>>>>> c7f4e0a4a1d9eb1e3d42816867f0b3570ef67c13
             data_init = 0xff
             data_buffer = SER.read(3)
             checksum = (data_init + data_buffer[0] + data_buffer[1]) & 0xff

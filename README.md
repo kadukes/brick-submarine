@@ -75,7 +75,7 @@ required:
     Battery Box)
 * Voltage regulator (e.g. Pololu 2123 S7V8F5 5V)
 * 2x Motor driver (e.g. Pololu 2130 DRV8833 Dual H-bridge)
-* Sonar sensor (should be waterproof, e.g. A02YYUW)
+* Sonar sensor (should be waterproof, e.g. SEN0598)
 * Pressure sensor (e.g. Honeywell SSCMANV030PA2A3 2 bar)
 * 9-Axis Digital motion processor (e.g. ICM-20948)
 * Analog digital converter (e.g. COM-KY053ADC)

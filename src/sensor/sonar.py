@@ -4,7 +4,7 @@ import serial
 
 SER = serial.Serial(
     port="/dev/serial0",
-    baudrate=9600,
+    baudrate=115200,
     parity=serial.PARITY_NONE,
     stopbits=serial.STOPBITS_ONE,
     bytesize=serial.EIGHTBITS,
@@ -16,6 +16,7 @@ currentMeasuredDistance = 0  # [mm]
 def sonar_listener():
     global currentMeasuredDistance
     while True:
+        SER.write(0x55)
         if SER.read() == b'\xff':
             data_init = 0xff
             data_buffer = SER.read(3)

@@ -20,7 +20,7 @@ acrylic cylinder for the basic shape.
 
 However, the end caps are not assembled from acrylic parts, 
 but printed using a 3D printer. The mesh-files for this can be 
-found in the `resources` directory.
+found in the `resources\print` directory.
 
 * `cap_head.stl`: This is the model of the front cap. It is 
     open at the front so that an acrylic glass pane can be 
@@ -57,10 +57,12 @@ required:
 
 ## Part 2: Building the mechanics
 
-The mechanics of the submarine are made entirely of LEGO®. We 
-do not provide detailed building instructions here. 
-Interested readers can draw inspiration from the blog entries 
-and videos. The blog also contains a complete parts list. 
+The mechanics of the submarine are made entirely of LEGO®. 
+You can find an LDraw file and a parts list in the `resources/lego` 
+directory. 
+
+Interested readers can draw further inspiration from the blog entries 
+and videos. 
 
 ## Part 3: Electronics
 

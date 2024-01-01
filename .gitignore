@@ -2,6 +2,7 @@
 *.csv
 __pycache__/
 sensor/__pycache__/
-resources/*.FCStd
-resources/*.FCStd1
+resources/lego/*.io
+resources/prints/*.FCStd
+resources/prints/*.FCStd1
 src/*.ini

@@ -19,8 +19,8 @@ the same parts as those in the blog i.e. we also use an
 acrylic cylinder for the basic shape. 
 
 However, the end caps are not assembled from acrylic parts, 
-but printed using a 3D printer. The mesh-files for this can be 
-found in the `resources\print` directory.
+but printed using a 3D printer. The mesh-files for these can be 
+found in the `resources\prints` directory.
 
 * `cap_head.stl`: This is the model of the front cap. It is 
     open at the front so that an acrylic glass pane can be 
@@ -36,7 +36,7 @@ found in the `resources\print` directory.
 * `cap_tail.stl`: This is the model of the rear cap. Unlike 
     the front cap, it is closed and contains three holes: two 
     plug connections for hoses and a central hole for cables.
-* `sonar_admission.stl`: This part ensures that the sonar 
+* `sonar_mount.stl`: This part ensures that the sonar 
     sensor has a flat mount for the round surface of the 
     cylinder. 
 
